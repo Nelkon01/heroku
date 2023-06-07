@@ -1,27 +1,13 @@
-const baseURL = "https://ci-swapi.herokuapp.com/api/";
-
-function getData(type, cb) {
+function getData(url, cb) {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", baseURL + type + "/");
+    xhr.open("GET", url);
     xhr.send();
-
     xhr.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             cb(JSON.parse(this.responseText));
         }
     };
-
 }
-// function writeToDocument(type) {
-//     var el = document.getElementById("data");
-//     el.innerHTML = "";
-//     getData(function(data) {
-//         data = data[type];
-//         data.forEach(function(item) {
-//             el.innerHTML += "<p>" + item.name + "</p>";
-//         });
-//     });
-// }
 
 function getTableHeaders(obj) {
     var tableHeaders = [];
@@ -31,11 +17,25 @@ function getTableHeaders(obj) {
     return `<tr>${tableHeaders}</tr>`;
 }
 
-function writeToDocument(type) {
+function generatePaginationButtons(next, previous) {
+    if (next && previous) {
+        return `<button onclick="writeToDocument('${previous}')">Previous</button>
+        <button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (next && !previous) {
+        return `<button onclick="writeToDocument('${next}')">Next</button>`;
+    }else if (!next && previous) {
+        return `<button onclick="writeToDocument('${previous}')">Previous</button>`;
+    }
+}
+function writeToDocument(url) {
     var tableRows = [];
     var el = document.getElementById("data");
     el.innerHTML = "";
-    getData(type, function(data){
+    getData(url, function(data){
+        var pagination;
+        if (data.next || data.previous) {
+            pagination = generatePaginationButtons(data.next, data.previous);
+        }
         data = data.results;
         var tableHeaders = getTableHeaders(data[0]);
         
@@ -49,6 +49,6 @@ function writeToDocument(type) {
             });
             tableRows.push(`<tr>${dataRow}</tr>`);
         });
-        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>`;
+        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>${pagination}`;
     });
 }
